@@ -1,6 +1,6 @@
 service_account_name    = "test-data-lake-service-account"
 service_account_path    = "example-terraform"
-GITHUB_REPOSITORY_OWNER = "sim-parables"
-GITHUB_REPOSITORY       = "sim-parables/terraform-aws-data-lake"
+GITHUB_REPOSITORY_OWNER = "openverse"
+GITHUB_REPOSITORY       = "openverse/terraform-aws-data-lake"
 GITHUB_REF              = "refs/heads/main"
 GITHUB_ENV              = "production"

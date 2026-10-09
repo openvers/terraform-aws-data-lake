@@ -153,7 +153,7 @@ provider "aws" {
 ## - `aws.accountgen`: Alias for the AWS provider for generating service accounts.
 ##---------------------------------------------------------------------------------------------------------------------
 module "aws_service_account" {
-  source = "github.com/sim-parables/terraform-aws-service-account.git?ref=a18e50b961655a345a7fd2d8e573fe84484c7235"
+  source = "github.com/openvers/terraform-aws-service-account.git?ref=6ba54cf0fece6e4f2fbbfae5dacb9d7e91e984bb"
 
   service_account_name = var.service_account_name
   service_account_path = var.service_account_path
@@ -188,7 +188,7 @@ provider "aws" {
 ## - `aws.accountgen`: Alias for the AWS provider for generating service accounts.
 ##---------------------------------------------------------------------------------------------------------------------
 module "aws_identity_federation_roles" {
-  source     = "github.com/sim-parables/terraform-aws-service-account.git//modules/identity_federation_roles?ref=a18e50b961655a345a7fd2d8e573fe84484c7235"
+  source     = "github.com/openvers/terraform-aws-service-account.git//modules/identity_federation_roles?ref=a18e50b961655a345a7fd2d8e573fe84484c7235"
   depends_on = [module.aws_service_account]
 
   assume_role_policies  = local.assume_role_policies
@@ -228,9 +228,6 @@ module "aws_identity_federation_roles" {
 ## - `bronze_bucket_name`: Name of the S3 bucket for raw/bronze data.
 ## - `silver_bucket_name`: Name of the S3 bucket for processed/silver data.
 ## - `gold_bucket_name`: Name of the S3 bucket for curated/gold data.
-##
-## Providers:
-## - `aws.auth_session`: AWS provider alias for authenticated session.
 ##
 ## Notes:
 ## - This module is designed for end-to-end data lake testing and development.
@@ -287,4 +284,3 @@ resource "aws_s3_object" "bronze_test_upload" {
   key    = "test/sample_bronze_upload.txt"
   source = local_file.bronze_sample.filename
 }
-

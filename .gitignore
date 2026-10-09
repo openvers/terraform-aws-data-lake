@@ -1,3 +1,6 @@
 test/.terraform
 test/.terraform/*
 test/.terraform.lock.hcl
+.terraform.lock.hcl
+.terraform
+.zed
