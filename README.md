@@ -53,10 +53,6 @@ Validate Github Workflows locally with [Nekto's Act](https://nektosact.com/intro
 
 ```bash
 
-# Ensure ENV Variables are enabled on test directory entry
-cd test
-direnv allow
-
 # [TODO] Remainig Under Construction (AWS portal steps/ equiv. CLI commands)
 
 cat << 'EOF' > ~/creds/aws.secrets.envrc
