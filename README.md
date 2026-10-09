@@ -1,11 +1,7 @@
 <p float="left">
   <img id="b-0" src="https://img.shields.io/badge/terraform-%235835CC.svg?style=for-the-badge&logo=terraform&logoColor=white" height="25px"/>
   <img id="b-1" src="https://img.shields.io/badge/Amazon_AWS-FF9900?style=for-the-badge&logo=amazonaws&logoColor=white" height="25px"/>
-<<<<<<< HEAD
-  <img id="b-2" src="https://img.shields.io/github/actions/workflow/status/openvers/terraform-aws-blob-trigger/tf-integration-test.yml?style=flat&logo=github&label=CD%20(September%202024)" height="25px"/>
-=======
-  <img id="b-2" src="https://img.shields.io/github/actions/workflow/status/sim-parables/terraform-aws-blob-trigger/tf-integration-test.yml?style=flat&logo=github&label=CD%20(October%202026)" height="25px"/>
->>>>>>> a1c8a946b14d43f007ee6e85341ac7bbfce14b86
+  <img id="b-2" src="https://img.shields.io/github/actions/workflow/status/openvers/terraform-aws-blob-trigger/tf-integration-test.yml?style=flat&logo=github&label=CD%20(October%202026)" height="25px"/>
 </p>
 
 
@@ -55,38 +51,36 @@ Validate Github Workflows locally with [Nekto's Act](https://nektosact.com/intro
 
 ### Prerequisits
 
-Store the identical Secrets in Github Organization/Repository to local workstation
-
 ```bash
-cat <<EOF > ~/creds/aws.secrets
-# Terraform.io Token
-TF_API_TOKEN=[COPY/PASTE MANUALLY]
 
-# Github PAT
-GITHUB_TOKEN=$(git auth token)
+# Ensure ENV Variables are enabled on test directory entry
+cd test
+direnv allow
 
-# AWS
-AWS_REGION=$(aws configure get region)
-AWS_OIDC_PROVIDER_ARN=[COPY/PASTE MANUALLY]
-AWS_CLIENT_ID=[COPY/PASTE MANUALLY]
-AWS_CLIENT_SECRET=[COPY/PASTE MANUALLY]
-AWS_ROLE_TO_ASSUME=[COPY/PASTE MANUALLY]
-AWS_ROLE_EXTERNAL_ID=[COPY/PASTE MANUALLY]
+# [TODO] Remainig Under Construction (AWS portal steps/ equiv. CLI commands)
+
+cat << 'EOF' > ~/creds/aws.secrets.envrc
+AWS_CREDS=$(aws configure export-credentials)
+
+export AWS_CLIENT_ID=$(echo $AWS_CREDS | jq -r '.AccessKeyId')
+export AWS_CLIENT_SECRET=$(echo $AWS_CREDS | jq -r '.SecretAccessKey')
+export AWS_SESSION_TOKEN=$(echo $AWS_CREDS | jq -r '.SessionToken')
+
+export TF_API_TOKEN=$(cat ~/.terraform.d/credentials.tfrc.json | jq -r '.credentials."app.terraform.io".token')
 EOF
 ```
 
 ### Local Deployment Testing
 
 ```bash
-export $(grep -v '^#' ~/creds/aws.secrets | xargs)
-export AWS_PROFILE=sso-admin
+aws sso login
+terraform login app.terraform.io
 
-aws sso login --profile $AWS_PROFILE
-
-terraform -chdir ./test init
-terraform -chdir ./test plan
-terraform -chdir ./test apply -auto-approve
-terraform -chdir ./test destroy -auto-approve
+cd test
+terraform init
+terraform plan
+terraform apply -auto-approve
+terraform destroy -auto-approve
 ```
 
 ### Manual Dispatch Testing
@@ -94,19 +88,38 @@ terraform -chdir ./test destroy -auto-approve
 ```bash
 # Try the Terraform Read job first
 act -j terraform-dispatch-plan \
-    -e .github/local.json \
-    --secret-file ~/creds/aws.secrets \
-    --remote-name $(git remote show)
+  -e .github/local.json \
+  -s AWS_CLIENT_ID \
+  -s AWS_CLIENT_SECRET \
+  -s AWS_SESSION_TOKEN \
+  -s AWS_REGION \
+  -s AWS_OIDC_PROVIDER_ARN \
+  -s TF_VAR_OIDC_PROVIDER_ARN \
+  -s TF_API_TOKEN \
+  --remote-name $(git remote show)
 
 act -j terraform-dispatch-apply \
-    -e .github/local.json \
-    --secret-file ~/creds/aws.secrets \
-    --remote-name $(git remote show)
+  -e .github/local.json \
+  -e .github/local.json \
+  -s AWS_CLIENT_ID \
+  -s AWS_CLIENT_SECRET \
+  -s AWS_SESSION_TOKEN \
+  -s AWS_REGION \
+  -s AWS_OIDC_PROVIDER_ARN \
+  -s TF_VAR_OIDC_PROVIDER_ARN \
+  -s TF_API_TOKEN \
+  --remote-name $(git remote show)
 
 act -j terraform-dispatch-destroy \
-    -e .github/local.json \
-    --secret-file ~/creds/aws.secrets \
-    --remote-name $(git remote show)
+  -e .github/local.json \
+  -s AWS_CLIENT_ID \
+  -s AWS_CLIENT_SECRET \
+  -s AWS_SESSION_TOKEN \
+  -s AWS_REGION \
+  -s AWS_OIDC_PROVIDER_ARN \
+  -s TF_VAR_OIDC_PROVIDER_ARN \
+  -s TF_API_TOKEN \
+  --remote-name $(git remote show)
 ```
 
 ### Integration Testing
@@ -117,18 +130,28 @@ mkdir /tmp/artifacts
 
 # Run the full Integration test with
 act -j terraform-integration-destroy \
-    -e .github/local.json \
-    --secret-file ~/creds/aws.secrets \
-    --remote-name $(git remote show) \
-    --artifact-server-path /tmp/artifacts
+  -e .github/local.json \
+  -s AWS_CLIENT_ID \
+  -s AWS_CLIENT_SECRET \
+  -s AWS_SESSION_TOKEN \
+  -s AWS_REGION \
+  -s AWS_OIDC_PROVIDER_ARN \
+  -s TF_VAR_OIDC_PROVIDER_ARN \
+  -s TF_API_TOKEN \
+  --remote-name $(git remote show) \
+  --artifact-server-path /tmp/artifacts
 ```
 
 ### Unit Testing
 
 ```bash
+source_env_if_exists test/.envrc
+
 act -j terraform-unit-tests \
     -e .github/local.json \
-    --secret-file ~/creds/aws.secrets \
+    -s AWS_REGION \
+    -s AWS_OIDC_PROVIDER_ARN \
+    -s TF_VAR_OIDC_PROVIDER_ARN \
     --remote-name $(git remote show)
 ```
 
