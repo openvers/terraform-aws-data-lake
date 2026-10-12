@@ -153,7 +153,7 @@ provider "aws" {
 ## - `aws.accountgen`: Alias for the AWS provider for generating service accounts.
 ##---------------------------------------------------------------------------------------------------------------------
 module "aws_service_account" {
-  source = "github.com/openvers/terraform-aws-service-account.git?ref=6ba54cf0fece6e4f2fbbfae5dacb9d7e91e984bb"
+  source = "github.com/openvers/terraform-aws-service-account.git?ref=42fb073acd6cdd793a6d064ddb0a1800906c1712"
 
   service_account_name = var.service_account_name
   service_account_path = var.service_account_path
@@ -177,7 +177,7 @@ provider "aws" {
 }
 
 ##---------------------------------------------------------------------------------------------------------------------
-## AWS IDENTITY FEDERATION ROLES MODULE
+## AWS IDENTITY FEDERATION MODULE
 ##
 ## This module configured IAM Trust policies to provide OIDC federated access from Github Actions to AWS.
 ##
@@ -187,8 +187,8 @@ provider "aws" {
 ## Providers:
 ## - `aws.accountgen`: Alias for the AWS provider for generating service accounts.
 ##---------------------------------------------------------------------------------------------------------------------
-module "aws_identity_federation_roles" {
-  source     = "github.com/openvers/terraform-aws-service-account.git//modules/identity_federation_roles?ref=a18e50b961655a345a7fd2d8e573fe84484c7235"
+module "aws_identity_federation" {
+  source     = "github.com/openvers/terraform-aws-service-account.git//modules/identity_federation?ref=42fb073acd6cdd793a6d064ddb0a1800906c1712"
   depends_on = [module.aws_service_account]
 
   assume_role_policies  = local.assume_role_policies

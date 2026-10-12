@@ -54,13 +54,23 @@ Validate Github Workflows locally with [Nekto's Act](https://nektosact.com/intro
 ```bash
 
 # [TODO] Remainig Under Construction (AWS portal steps/ equiv. CLI commands)
+# [TODO] Add the AWSReservedSSO_AdministratorAccess to the Assume Role supplied in <service-principal-arn>
 
 cat << 'EOF' > ~/creds/aws.secrets.envrc
-AWS_CREDS=$(aws configure export-credentials)
+SERVICE_PRINCIPAL_ROLE_ARN="<service-principal-arn>"
 
-export AWS_CLIENT_ID=$(echo $AWS_CREDS | jq -r '.AccessKeyId')
-export AWS_CLIENT_SECRET=$(echo $AWS_CREDS | jq -r '.SecretAccessKey')
-export AWS_SESSION_TOKEN=$(echo $AWS_CREDS | jq -r '.SessionToken')
+AWS_CREDS=$(
+  aws sts assume-role \
+    --role-arn "${SERVICE_PRINCIPAL_ROLE_ARN}" \
+    --role-session-name "terraform-developer-session"
+)
+
+export AWS_CLIENT_ID=$(echo $AWS_CREDS | jq -r '.Credentials.AccessKeyId')
+export AWS_CLIENT_SECRET=$(echo $AWS_CREDS | jq -r '.Credentials.SecretAccessKey')
+export AWS_SESSION_TOKEN=$(echo $AWS_CREDS | jq -r '.Credentials.SessionToken')
+
+export AWS_OIDC_PROVIDER_ARN=$(aws iam list-open-id-connect-providers --query 'OpenIDConnectProviderList[0].Arn' --output text)
+export TF_VAR_OIDC_PROVIDER_ARN=$AWS_OIDC_PROVIDER_ARN
 
 export TF_API_TOKEN=$(cat ~/.terraform.d/credentials.tfrc.json | jq -r '.credentials."app.terraform.io".token')
 EOF
@@ -72,11 +82,17 @@ EOF
 aws sso login
 terraform login app.terraform.io
 
-cd test
-terraform init
-terraform plan
-terraform apply -auto-approve
-terraform destroy -auto-approve
+terraform -chdir=test init
+terraform -chdir=test plan
+terraform -chdir=test apply -auto-approve
+
+export BRONZE_BUCKET_ID=$(terraform -chdir=./test output -raw bronze_bucket_id)
+export SILVER_BUCKET_ID=$(terraform -chdir=./test output -raw silver_bucket_id)
+export GOLD_BUCKET_ID=$(terraform -chdir=./test output -raw gold_bucket_id)
+
+python3 -m pytest test/unit_test -m "github and env" -rs
+
+terraform -chdir=test destroy -auto-approve
 ```
 
 ### Manual Dispatch Testing

@@ -4,3 +4,7 @@ test/.terraform.lock.hcl
 .terraform.lock.hcl
 .terraform
 .zed
+.tmp
+.pytest_cache
+test/sample_bronze_upload.txt
+test/unit_test/__pycache__

@@ -76,10 +76,20 @@ jobs:
         TF_VAR_GITHUB_ENV="${{ needs.reusable-env-vars.outputs.TF_VAR_GITHUB_ENV }}"
     with:
       ACT_MODE: ${{ !!github.event.act }}
-  
+
+  terraform-integration-test:
+    needs: [ reusable-env-vars, terraform-integration-apply ]
+    uses: ./.github/workflows/reusable-test.yml
+    secrets:
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+      TF_API_TOKEN: ${{ secrets.TF_API_TOKEN }}
+    with:
+      ACT_MODE: ${{ !!github.event.act }}
+      markers: ${{ !!github.event.act && 'github and env' || 'github and oidc' }}
+   
   terraform-integration-destroy:
     if: always()
-    needs: [ reusable-env-vars, terraform-integration-apply ]
+    needs: [ reusable-env-vars, terraform-integration-apply, terraform-integration-test ]
     uses: openvers/github-workflows-reusable/.github/workflows/tf-integration-destroy.yml@AWSv1
     secrets:
       AWS_CLIENT_ID: ${{ secrets.AWS_CLIENT_ID }}
